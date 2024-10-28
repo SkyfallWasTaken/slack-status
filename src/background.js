@@ -47,13 +47,17 @@ async function main() {
 async function updateStatus(tabId, config) {
     console.debug("Tab activated:", tabId)
     const tab = await chrome.tabs.get(tabId);
-    if (!tab.title) return;
+    const results = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: () => document.title
+    });
+    const title = results[0].result || tab.title;
 
     const data = new FormData();
     data.append('token', config.xoxc);
     data.append('profile', JSON.stringify({
         status_emoji: ':globe_with_meridians:',
-        status_text: `On ${tab.title}`
+        status_text: truncate(`On ${title}`, 100)
     }))
     await fetch(`https://${config.teamDomain}.slack.com/api/users.profile.set`, {
         method: 'POST',
@@ -62,7 +66,14 @@ async function updateStatus(tabId, config) {
             Cookie: `d=${encodeURIComponent(config.xoxd)}`
         }
     })
-    console.log("Updated status to", tab.title)
+    console.log("Updated status to", title)
+}
+
+/** @type (input: string, length: number) => string */
+function truncate(input, length) {
+    if (input.length <= length) return input;
+    if (length < 3) return input.substring(0, length);
+    return input.substring(0, length - 3) + '...';
 }
 
 main();
