@@ -10,14 +10,18 @@ async function getSlackConfig() {
         active: false
     });
     if (!slackTab.id) throw new Error("Failed to create tab");
+    console.log(`Created Slack tab: ${slackTab.id}`)
+
     const results = await chrome.scripting.executeScript({
         target: { tabId: slackTab.id },
         func: () => localStorage.getItem("localConfig_v2"),
         injectImmediately: true
     });
+    console.log("Got localConfig", results);
     const localConfig = results[0].result;
     if (!localConfig) throw new Error("Failed to get xoxc");
     const config = JSON.parse(localConfig);
+    console.log("Parsed local config", config)
     const firstWorkspace = Object.keys(config.teams)[0];
     if (!firstWorkspace) throw new Error("Failed to get first workspace - are you signed in?");
     const team = config.teams[firstWorkspace];
@@ -34,6 +38,8 @@ async function getSlackConfig() {
 
 async function main() {
     const config = await getSlackConfig()
+    console.log("Final config", config)
+
     chrome.tabs.onActivated.addListener(async (activeInfo) => {
         console.log("Tab activated")
         const tab = await chrome.tabs.get(activeInfo.tabId);
