@@ -27,11 +27,9 @@ async function getSlackConfig() {
     const xoxc = team?.token;
     const teamDomain = team?.domain;
 
-    setInterval(() => {
-        try {
-            chrome.tabs.remove(slackTab.id);
-        } catch {}
-    }, 500);
+    setTimeout(() => {
+        chrome.tabs.remove(slackTab.id);
+    }, 1000);
     return {
         xoxd,
         xoxc,
