@@ -51,6 +51,7 @@ async function main() {
     if (tab.url?.startsWith("chrome://") || tab.url?.startsWith("firefox://") || tab.url?.startsWith("edge://")) return;
     lastTabId = tab.id || 0;
     updateStatus(tab.id || 0, config);
+    await delay(1200);
   }
 }
 
