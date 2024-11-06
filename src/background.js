@@ -94,7 +94,7 @@ const redactions = {
     "outlook.office.com": "Outlook",
     "teams.microsoft.com": "Teams",
 } 
-const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+const emailRegex = /\b[\w-\.]+@([\w-]+\.)+[\w-]{2,4}\b/g;;
 /** @type (input: string, url: URL, length: number) => string */
 function redactAndTruncate(input, url, length) {
   let redacted = input.replaceAll(emailRegex, "[email]");
