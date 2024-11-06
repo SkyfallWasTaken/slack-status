@@ -47,6 +47,7 @@ async function main() {
   while (true) {
     let queryOptions = { active: true, lastFocusedWindow: true };
     let [tab] = await chrome.tabs.query(queryOptions);
+    if (!tab) continue;
     if (tab.id === lastTabId) continue;
     if (tab.url?.startsWith("chrome://") || tab.url?.startsWith("firefox://") || tab.url?.startsWith("edge://")) continue;
     lastTabId = tab.id || 0;
@@ -66,14 +67,14 @@ async function updateStatus(tabId, config) {
     func: () => document.title,
   });
   const title = results[0].result || tab.title;
-
+  
   const data = new FormData();
   data.append("token", config.xoxc);
   data.append(
     "profile",
     JSON.stringify({
       status_emoji: ":globe_with_meridians:",
-      status_text: truncate(`On ${title}`, 100),
+      status_text: redactAndTruncate(`On ${title}`, new URL(tab.url || tab.pendingUrl || "placeholder.com"), 100),
     }),
   );
   await fetch(`https://${config.teamDomain}.slack.com/api/users.profile.set`, {
@@ -86,11 +87,24 @@ async function updateStatus(tabId, config) {
   console.log("Updated status to", title);
 }
 
-/** @type (input: string, length: number) => string */
-function truncate(input, length) {
-  if (input.length <= length) return input;
-  if (length < 3) return input.substring(0, length);
-  return input.substring(0, length - 3) + "...";
+/** @type Record<string, string> */
+const redactions = {
+    "mail.google.com": "Gmail",
+    "outlook.live.com": "Outlook",
+    "outlook.office.com": "Outlook",
+    "teams.microsoft.com": "Teams",
+} 
+const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/g;
+/** @type (input: string, url: URL, length: number) => string */
+function redactAndTruncate(input, url, length) {
+  let redacted = input.replaceAll(emailRegex, "[email]");
+  const domain = new URL(url).hostname;
+  if (redactions[domain]) {
+    redacted = "On " + redactions[domain];
+  }
+  if (input.length <= length) return redacted;
+  if (length < 3) return redacted.substring(0, length);
+  return redacted.substring(0, length - 3) + "...";
 }
 
 /** @type (ms: number) => Promise<void> */
