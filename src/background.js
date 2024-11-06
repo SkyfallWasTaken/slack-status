@@ -30,7 +30,7 @@ async function getSlackConfig() {
     setInterval(() => {
         try {
             chrome.tabs.remove(slackTab.id);
-        catch {}
+        } catch {}
     }, 500);
     return {
         xoxd,
