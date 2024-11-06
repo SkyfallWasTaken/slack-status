@@ -47,8 +47,8 @@ async function main() {
   while (true) {
     let queryOptions = { active: true, lastFocusedWindow: true };
     let [tab] = await chrome.tabs.query(queryOptions);
-    if (tab.id === lastTabId) return;
-    if (tab.url?.startsWith("chrome://") || tab.url?.startsWith("firefox://") || tab.url?.startsWith("edge://")) return;
+    if (tab.id === lastTabId) continue;
+    if (tab.url?.startsWith("chrome://") || tab.url?.startsWith("firefox://") || tab.url?.startsWith("edge://")) continue;
     lastTabId = tab.id || 0;
     updateStatus(tab.id || 0, config);
     await delay(1200);
