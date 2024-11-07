@@ -54,7 +54,7 @@ async function updateStatus(tabId, auth) {
     "profile",
     JSON.stringify({
       status_emoji: ":globe_with_meridians:",
-      status_text: await redactAndTemplate(`On ${title}`, new URL(tab.url || tab.pendingUrl || "placeholder.com"), 100),
+      status_text: await redactAndTemplate(title, new URL(tab.url || tab.pendingUrl || "placeholder.com"), 100),
     }),
   );
   await fetch(`https://${auth.teamDomain}.slack.com/api/users.profile.set`, {
