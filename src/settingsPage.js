@@ -1,8 +1,18 @@
+import { getSlackAuth } from "./slack.js";
+
 async function main() {
     const workspaceSelect = document.getElementById("workspace-select");
     const enabledSwitch = document.getElementById("enable");
     const templateTextInput = document.getElementById("templateText");
 
+    try {
+        await getSlackAuth();
+    }
+    catch (e) {
+        console.error(e);
+        alert("Failed to get Slack auth, please sign in and try again!");
+        return;
+    }
     const { workspaces, selectedWorkspaceId, templateText } = await chrome.storage.local.get({
         workspaces: [],
         enabled: true,
