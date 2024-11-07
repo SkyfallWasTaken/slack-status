@@ -6,12 +6,24 @@ async function main() {
     auth = await getSlackAuth();
   } catch (e) {
     console.error(e);
-    await chrome.tabs.create({ url: chrome.runtime.getURL("src/settings.html") });
+    await openSettings();
     return;
   }
 
+  const { enabled, authorized } = await chrome.storage.local.get({ enabled: true, authorized: false });
+  if (!authorized) {
+    const authd = confirm("Welcome to Slack Status!\n\nWe use your Slack auth cookie to connect to your Slack account. By pressing OK, you agree to this. Your token is *never* shared with anyone else.\n\nIf you do not agree to this, please click 'Cancel' and uninstall the extension.");
+    if (authd) {
+      await openSettings();
+      await chrome.storage.local.set({ authorized: true });
+    } else {
+      alert("Okay, we'll uninstall the extension for you. We'll also open the GitHub if you'd like to try this again.");
+      await chrome.tabs.create({ url: "https://github.com/SkyfallWasTaken/slack-status" });
+      await chrome.management.uninstallSelf();
+    }
+  }
+
   let lastTabId = -1;
-  const { enabled } = await chrome.storage.local.get({ enabled: true });
   while (true) {
     let queryOptions = { active: true, lastFocusedWindow: true };
     let [tab] = await chrome.tabs.query(queryOptions);
@@ -90,6 +102,10 @@ function redactAndTruncate(input, url, length) {
 /** @type (ms: number) => Promise<void> */
 async function delay(ms) {
   return await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function openSettings() {
+  await chrome.tabs.create({ url: chrome.runtime.getURL("src/settings.html") });
 }
 
 main();
