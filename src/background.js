@@ -1,47 +1,14 @@
-async function getSlackConfig() {
-  const xoxd = (
-    await chrome.cookies.get({
-      name: "d",
-      url: "https://app.slack.com",
-    })
-  )?.value;
-  if (!xoxd) throw new Error("Failed to get xoxd");
-
-  const slackTab = await chrome.tabs.create({
-    url: "https://app.slack.com/404",
-    active: false,
-  });
-  if (!slackTab.id) throw new Error("Failed to create tab");
-  console.debug(`Created Slack tab: ${slackTab.id}`);
-
-  const results = await chrome.scripting.executeScript({
-    target: { tabId: slackTab.id },
-    func: () => localStorage.getItem("localConfig_v2"),
-    injectImmediately: true,
-  });
-
-  const localConfig = results[0].result;
-  if (!localConfig) throw new Error("Failed to get xoxc");
-  const config = JSON.parse(localConfig);
-  const firstWorkspace = Object.keys(config.teams)[0];
-  if (!firstWorkspace)
-    throw new Error("Failed to get first workspace - are you signed in?");
-  const team = config.teams[firstWorkspace];
-  const xoxc = team?.token;
-  const teamDomain = team?.domain;
-
-  setTimeout(() => {
-    chrome.tabs.remove(slackTab.id || chrome.tabs.TAB_ID_NONE);
-  }, 1000);
-  return {
-    xoxd,
-    xoxc,
-    teamDomain,
-  };
-}
+import { getSlackAuth } from "./slack.js";
 
 async function main() {
-  const config = await getSlackConfig();
+  let auth;
+  try {
+    auth = await getSlackAuth();
+  } catch (e) {
+    console.error(e);
+    await chrome.tabs.create({ url: chrome.runtime.getURL("src/settings.html") });
+    return;
+  }
 
   let lastTabId = -1;
   while (true) {
@@ -51,7 +18,7 @@ async function main() {
     if (tab.id === lastTabId) continue;
     if (tab.url?.startsWith("chrome://") || tab.url?.startsWith("firefox://") || tab.url?.startsWith("edge://")) continue;
     lastTabId = tab.id || 0;
-    updateStatus(tab.id || 0, config);
+    updateStatus(tab.id || 0, auth);
     await delay(1200);
   }
 }
@@ -59,7 +26,7 @@ async function main() {
 /**
  * @type (tabId: number, config: { xoxc: string, xoxd: string, teamDomain: string }) => Promise<void>
  */
-async function updateStatus(tabId, config) {
+async function updateStatus(tabId, auth) {
   console.debug("Tab activated:", tabId);
   const tab = await chrome.tabs.get(tabId);
   const results = await chrome.scripting.executeScript({
@@ -67,9 +34,9 @@ async function updateStatus(tabId, config) {
     func: () => document.title,
   });
   const title = results[0].result || tab.title;
-  
+
   const data = new FormData();
-  data.append("token", config.xoxc);
+  data.append("token", auth.xoxc);
   data.append(
     "profile",
     JSON.stringify({
@@ -77,23 +44,28 @@ async function updateStatus(tabId, config) {
       status_text: redactAndTruncate(`On ${title}`, new URL(tab.url || tab.pendingUrl || "placeholder.com"), 100),
     }),
   );
-  await fetch(`https://${config.teamDomain}.slack.com/api/users.profile.set`, {
+  await fetch(`https://${auth.teamDomain}.slack.com/api/users.profile.set`, {
     method: "POST",
     body: data,
     headers: {
-      Cookie: `d=${encodeURIComponent(config.xoxd)}`,
+      Cookie: `d=${encodeURIComponent(auth.xoxd)}`,
     },
   });
   console.log("Updated status to", title);
 }
 
+chrome.action.onClicked.addListener(async () => {
+  await chrome.tabs.create({ url: chrome.runtime.getURL("src/settings.html") });
+});
+
+
 /** @type Record<string, string> */
 const redactions = {
-    "mail.google.com": "Gmail",
-    "outlook.live.com": "Outlook",
-    "outlook.office.com": "Outlook",
-    "teams.microsoft.com": "Teams",
-} 
+  "mail.google.com": "Gmail",
+  "outlook.live.com": "Outlook",
+  "outlook.office.com": "Outlook",
+  "teams.microsoft.com": "Teams",
+}
 const emailRegex = /\b[\w-\.]+@([\w-]+\.)+[\w-]{2,4}\b/g;
 /** @type (input: string, url: URL, length: number) => string */
 function redactAndTruncate(input, url, length) {

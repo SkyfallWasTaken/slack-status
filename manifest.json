@@ -3,6 +3,7 @@
     "name": "Slack Status",
     "description": "Updates your Slack status based on your current tab",
     "version": "1.0",
+    "action": {},
     "background": {
         "service_worker": "src/background.js",
         "type": "module"
@@ -14,6 +15,7 @@
         "background",
         "cookies",
         "scripting",
-        "tabs"
+        "tabs",
+        "storage"
     ]
 }
