@@ -11,14 +11,16 @@ async function main() {
   }
 
   let lastTabId = -1;
+  const { enabled } = await chrome.storage.local.get({ enabled: true });
   while (true) {
     let queryOptions = { active: true, lastFocusedWindow: true };
     let [tab] = await chrome.tabs.query(queryOptions);
     if (!tab) continue;
     if (tab.id === lastTabId) continue;
-    if (tab.url?.startsWith("chrome://") || tab.url?.startsWith("firefox://") || tab.url?.startsWith("edge://")) continue;
     lastTabId = tab.id || 0;
-    updateStatus(tab.id || 0, auth);
+    if (enabled) {
+      updateStatus(tab.id || 0, auth);
+    }
     await delay(1200);
   }
 }
@@ -29,10 +31,16 @@ async function main() {
 async function updateStatus(tabId, auth) {
   console.debug("Tab activated:", tabId);
   const tab = await chrome.tabs.get(tabId);
-  const results = await chrome.scripting.executeScript({
-    target: { tabId },
-    func: () => document.title,
-  });
+  let results;
+  try {
+    results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => document.title,
+    });
+  } catch {
+    console.warn(`Tab ${tabId} is not accessible - probably a browser page?`);
+    return;
+  }
   const title = results[0].result || tab.title;
 
   const data = new FormData();
@@ -81,7 +89,6 @@ function redactAndTruncate(input, url, length) {
 
 /** @type (ms: number) => Promise<void> */
 async function delay(ms) {
-  // return await for better async stack trace support in case of errors.
   return await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
