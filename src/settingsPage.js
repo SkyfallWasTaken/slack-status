@@ -1,6 +1,6 @@
-import { getSlackAuth } from "./slack.js";
-
 async function main() {
+    const { getSlackAuth } = await import("./slack.js");
+
     const workspaceSelect = document.getElementById("workspace-select");
     const enabledSwitch = document.getElementById("enable");
     const templateTextInput = document.getElementById("templateText");
