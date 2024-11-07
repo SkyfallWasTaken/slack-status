@@ -41,8 +41,9 @@ async function updateStatus(tabId, auth) {
       target: { tabId },
       func: () => document.title,
     });
-  } catch {
+  } catch (e) {
     console.warn(`Tab ${tabId} is not accessible - probably a browser page?`);
+    console.warn(e)
     return;
   }
   const title = results[0].result || tab.title;
