@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark" />
     <link rel="stylesheet" href="pico.css" />
     <title>Settings</title>
-    <script src="authorizePage.js" defer></script>
+    <script src="settingsPage.js" defer></script>
   </head>
   <body>
     <main class="container">
@@ -31,6 +31,19 @@
           aria-label="Select your Slack workspace"
           required
         ></select>
+
+        <h3>Template</h3>
+        <label for="templateText">Text template</label>
+        <input
+          type="text"
+          name="templateText"
+          id="templateText"
+          required
+          placeholder="On $TITLE"
+        />
+        <small
+          >Tip: <code>$TITLE</code> will be replaced with the site title</small
+        >
       </div>
     </main>
   </body>

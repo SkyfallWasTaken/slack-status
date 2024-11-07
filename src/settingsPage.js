@@ -1,11 +1,13 @@
 async function main() {
     const workspaceSelect = document.getElementById("workspace-select");
     const enabledSwitch = document.getElementById("enable");
+    const templateTextInput = document.getElementById("templateText");
 
-    const { workspaces, selectedWorkspaceId } = await chrome.storage.local.get({
+    const { workspaces, selectedWorkspaceId, templateText } = await chrome.storage.local.get({
         workspaces: [],
         enabled: true,
         selectedWorkspaceId: null,
+        templateText: "On $TITLE",
     });
 
     if (workspaces.length != 0) {
@@ -30,16 +32,25 @@ async function main() {
         workspaceSelect?.appendChild(option);
     }
 
-    workspaceSelect?.addEventListener("change", (event) => {
+    // @ts-ignore
+    templateTextInput.value = templateText;
+
+    // @ts-ignore
+    bindSetting(enabledSwitch, "enabled");
+    // @ts-ignore
+    bindSetting(templateTextInput, "templateText")
+    // @ts-ignore
+    bindSetting(workspaceSelect, "selectedWorkspaceId");
+}
+
+/** @type (element: HTMLInputElement, key: string) => void */
+function bindSetting(element, key) {
+    element.addEventListener("change", (event) => {
         if (event.target && 'value' in event.target) {
-            chrome.storage.local.set({ selectedWorkspaceId: event.target.value });
+            chrome.storage.local.set({ [key]: event.target.value });
         }
     });
-    enabledSwitch?.addEventListener("change", (event) => {
-        if (event.target && 'value' in event.target) {
-            chrome.storage.local.set({ enabled: event.target.value });
-        }
-    });
+
 }
 
 main()

@@ -54,7 +54,7 @@ async function updateStatus(tabId, auth) {
     "profile",
     JSON.stringify({
       status_emoji: ":globe_with_meridians:",
-      status_text: redactAndTruncate(`On ${title}`, new URL(tab.url || tab.pendingUrl || "placeholder.com"), 100),
+      status_text: await redactAndTemplate(`On ${title}`, new URL(tab.url || tab.pendingUrl || "placeholder.com"), 100),
     }),
   );
   await fetch(`https://${auth.teamDomain}.slack.com/api/users.profile.set`, {
@@ -80,16 +80,18 @@ const redactions = {
   "teams.microsoft.com": "Teams",
 }
 const emailRegex = /\b[\w-\.]+@([\w-]+\.)+[\w-]{2,4}\b/g;
-/** @type (input: string, url: URL, length: number) => string */
-function redactAndTruncate(input, url, length) {
-  let redacted = input.replaceAll(emailRegex, "[email]");
+/** @type (input: string, url: URL, length: number) => Promise<string> */
+async function redactAndTemplate(input, url, length) {
+  const { templateText } = await chrome.storage.local.get({ templateText: "On $TITLE" });
+  let redactedTitle = input.replaceAll(emailRegex, "[email]");
   const domain = new URL(url).hostname;
   if (redactions[domain]) {
-    redacted = "On " + redactions[domain];
+    redactedTitle = redactions[domain];
   }
-  if (input.length <= length) return redacted;
-  if (length < 3) return redacted.substring(0, length);
-  return redacted.substring(0, length - 3) + "...";
+  const fullTitle = templateText.replaceAll("$TITLE", redactedTitle);
+  if (fullTitle.length <= length) return fullTitle;
+  if (length < 3) return fullTitle.substring(0, length);
+  return fullTitle.substring(0, length - 3) + "...";
 }
 
 /** @type (ms: number) => Promise<void> */
