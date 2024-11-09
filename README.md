@@ -2,7 +2,7 @@
 
 An extension to automatically set your Slack status as your tab title! Made for [Browserbuddy.](https://browserbuddy.hackclub.com)
 
-![image](./.github/example.png)
+[![image](./.github/example.png)](https://raw.githubusercontent.com/SkyfallWasTaken/slack-status/refs/heads/main/.github/example.png)
 
 ## Installing Slack Status
 
@@ -12,7 +12,7 @@ An extension to automatically set your Slack status as your tab title! Made for 
 - Read the privacy statement and click "Authorize"
 - Double check the Slack workspace selected in the settings page is the one you're trying to use!
 
-![image](./.github/settingsPage.png)
+[![image](./.github/settingsPage.png)](https://raw.githubusercontent.com/SkyfallWasTaken/slack-status/refs/heads/main/.github/settingsPage.png)
 
 ---
 
