@@ -16,17 +16,12 @@ async function main() {
   }
 
   let lastTabId = -1;
-  while (true) {
-    let queryOptions = { active: true, lastFocusedWindow: true };
-    let [tab] = await chrome.tabs.query(queryOptions);
-    if (!tab) continue;
-    if (tab.id === lastTabId) continue;
+  setInterval(async () => {
+    let [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (!tab) return;
+    if (enabled && tab.id != lastTabId) updateStatus(tab.id || 0, auth);
     lastTabId = tab.id || 0;
-    if (enabled) {
-      updateStatus(tab.id || 0, auth);
-    }
-    await delay(1200);
-  }
+  }, 2000);
 }
 
 /**
